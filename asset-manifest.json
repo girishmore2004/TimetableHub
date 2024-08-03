@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/TimetableHub/static/css/main.d64b291e.css",
+    "main.js": "/TimetableHub/static/js/main.fe7d3e33.js",
+    "static/js/239.e4ba869f.chunk.js": "/TimetableHub/static/js/239.e4ba869f.chunk.js",
+    "static/js/213.3f737c1b.chunk.js": "/TimetableHub/static/js/213.3f737c1b.chunk.js",
+    "static/js/732.9417b2e1.chunk.js": "/TimetableHub/static/js/732.9417b2e1.chunk.js",
+    "static/js/453.9b944272.chunk.js": "/TimetableHub/static/js/453.9b944272.chunk.js",
+    "index.html": "/TimetableHub/index.html",
+    "main.d64b291e.css.map": "/TimetableHub/static/css/main.d64b291e.css.map",
+    "main.fe7d3e33.js.map": "/TimetableHub/static/js/main.fe7d3e33.js.map",
+    "239.e4ba869f.chunk.js.map": "/TimetableHub/static/js/239.e4ba869f.chunk.js.map",
+    "213.3f737c1b.chunk.js.map": "/TimetableHub/static/js/213.3f737c1b.chunk.js.map",
+    "732.9417b2e1.chunk.js.map": "/TimetableHub/static/js/732.9417b2e1.chunk.js.map",
+    "453.9b944272.chunk.js.map": "/TimetableHub/static/js/453.9b944272.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.d64b291e.css",
+    "static/js/main.fe7d3e33.js"
+  ]
+}
