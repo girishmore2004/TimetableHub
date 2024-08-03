@@ -62,7 +62,7 @@ const Timetable = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/timetable/generate', {
+      const response = await fetch('/api/timetable/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

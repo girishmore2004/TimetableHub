@@ -5,7 +5,7 @@ const cors = require('cors');
 
 const app = express();  
 const corsOptions = {
-  origin: 'https://timetablehub.netlify.app/', // replace with your Netlify site URL
+  origin: 'https://timetablehub.netlify.app', // replace with your Netlify site URL
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 };
