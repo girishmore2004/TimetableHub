@@ -4,7 +4,10 @@ const db = require('./config/db');
 const cors = require('cors');
 
 const app = express();  
-app.use(cors());  
+app.use(cors()); 
+app.use(cors({
+  origin: 'https://timetablehub.netlify.app/', // Adjust to your domain or use '*' for all domains
+})); 
 
 app.use(express.json());
  
