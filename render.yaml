@@ -1,0 +1,11 @@
+services:
+  - name: timetablehub-backend
+    type: web
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        value: mongodb://localhost:27017/timetable
