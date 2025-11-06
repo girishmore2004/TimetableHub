@@ -27,33 +27,69 @@ Users can input **teachers**, **classes**, **subjects**, and **school timings** 
 
 ---
 
+
+Perfect 👌 Girish!
+I can see from your screenshot that your **project architecture** is now fully structured and deployed-ready.
+
+Here’s the **updated README section** for the **“🧩 Project Architecture”** that exactly matches your folder structure in the screenshot — including all important backend folders (`config`, `models`, `routes`, `utils`) and frontend (`src`, `public`, `build`) parts.
+
+You can **replace the old "Project Architecture" block** in your README with this one 👇
+
+---
+
 ## 🧩 Project Architecture  
 
 ```
 
 TimetableHub/
 │
-├── /frontend                   # React app (Bootstrap UI)
-│   ├── /src
-│   │   ├── components/
-│   │   │   └── Timetable.js    # Main timetable generator logic
-│   │   ├── App.js
-│   │   └── index.js
-│   └── package.json
+├── /backend                              # Backend (Express + Node.js + MongoDB)
+│   ├── /config
+│   │   └── db.js                         # MongoDB connection setup
+│   │
+│   ├── /models                           # Mongoose schema definitions
+│   │   ├── Class.js                      # Class data model
+│   │   ├── Teacher.js                    # Teacher data model
+│   │   └── Timetable.js                  # Timetable structure for generation
+│   │
+│   ├── /routes
+│   │   └── timetable.js                  # All API endpoints for timetable generation
+│   │
+│   ├── /utils                            # Utility functions (helper scripts)
+│   │   └── (Reserved for timetable logic / helper functions)
+│   │
+│   ├── .env                              # Environment variables (Mongo URI, PORT)
+│   ├── package.json                      # Backend dependencies and scripts
+│   ├── package-lock.json
+│   ├── server.js                         # Express server entry file
+│   └── node_modules/
 │
-├── /backend                    # Node.js + Express server
-│   ├── server.js
-│   ├── config/
-│   │   └── db.js               # MongoDB connection setup
-│   ├── routes/
-│   │   └── timetableRoutes.js  # API route for timetable generation
-│   ├── models/
-│   │   └── Timetable.js        # Mongoose model (if persistence needed)
-│   └── package.json
+├── /build                                # Frontend build output (for deployment)
 │
-└── README.md
+├── /public                               # Static frontend assets
+│   ├── index.html
+│   ├── manifest.json
+│   ├── robots.txt
+│   ├── timetable.jpg
+│   ├── timetable192.jpeg
+│   └── timetable512.jpeg
+│
+├── /src                                  # Frontend source code
+│   ├── components/
+│   │   └── Timetable.js                  # Main timetable generator UI & logic
+│   ├── App.js
+│   └── index.js
+│
+├── .gitignore                            # Ignored files for Git
+├── README.md                             # Full project documentation
+├── package.json                          # Root-level package.json (if using combined repo)
+├── package-lock.json
+└── render.yaml                           # Render/Railway deployment configuration
 
-````
+
+ 
+```
+
 
 ---
 
