@@ -3,14 +3,14 @@
   "name": "Timetable Hub",
   "icons": [
     {
-      "src": "timetable192.png",
+      "src": "timetable192.jpeg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "timetable512.png",
+      "src": "timetable512.jpeg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ],
   "start_url": ".",
