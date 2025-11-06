@@ -1,8 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
- 
+
+// Generate selectable time options
 const generateTimeOptions = (start, end, interval) => {
   const options = [];
   for (let hour = start; hour <= end; hour++) {
@@ -23,11 +23,12 @@ const Timetable = () => {
     closing: '',
     recessStart: '',
     recessEnd: '',
-    classDuration: 60  
+    classDuration: 60
   });
- 
+
   const timeOptions = useMemo(() => generateTimeOptions(0, 23, 15), []);
- 
+
+  // Handle input changes for teacher/class
   const handleInputChange = (type, index, event) => {
     const value = event.target.value;
     const updatedData = [...(type === 'teacher' ? teacherData : classData)];
@@ -46,8 +47,9 @@ const Timetable = () => {
     }
   };
 
+  // Add a new row for teacher or class
   const addRow = (type) => {
-    const newRow = type === 'teacher' ? { name: '', subjects: [] } : { name: '', subjects: [] };
+    const newRow = { name: '', subjects: [] };
     if (type === 'teacher') {
       setTeacherData([...teacherData, newRow]);
     } else {
@@ -55,6 +57,7 @@ const Timetable = () => {
     }
   };
 
+  // Generate timetable via backend API
   const handleGenerateTimetable = async () => {
     if (!timings.opening || !timings.closing || !timings.recessStart || !timings.recessEnd || !timings.classDuration) {
       alert('Please set all school timings before generating the timetable.');
@@ -64,9 +67,7 @@ const Timetable = () => {
     try {
       const response = await fetch('https://timetablehub-backend-production.up.railway.app/api/timetable/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teacherData, classData, timings }),
       });
 
@@ -78,61 +79,68 @@ const Timetable = () => {
       const data = await response.json();
       const styledData = data.map(entry => ({
         ...entry,
-        teacher: entry.teacher === 'Unscheduled' ? <span style={{ color: 'red' }}>Unscheduled</span> : entry.teacher
+        teacher: entry.teacher === 'Unscheduled' ? (
+          <span style={{ color: 'red' }}>Unscheduled</span>
+        ) : entry.teacher
       }));
-      setTimetable(styledData); 
+
+      setTimetable(styledData);
     } catch (error) {
       console.error('Error generating timetable:', error.message);
     }
   };
- 
+
+  // Group timetable by class
   const groupedTimetable = useMemo(() => {
     const groupedByClass = timetable.reduce((acc, entry) => {
-      if (!acc[entry.class]) {
-        acc[entry.class] = [];
-      }
+      if (!acc[entry.class]) acc[entry.class] = [];
       acc[entry.class].push(entry);
       return acc;
     }, {});
 
     for (const className in groupedByClass) {
-      groupedByClass[className].sort((a, b) => new Date(`1970-01-01T${a.time}:00`) - new Date(`1970-01-01T${b.time}:00`));
+      groupedByClass[className].sort(
+        (a, b) => new Date(`1970-01-01T${a.time}:00`) - new Date(`1970-01-01T${b.time}:00`)
+      );
     }
 
     return groupedByClass;
   }, [timetable]);
- 
+
+  // Generate teacher schedule
   const teacherSchedule = useMemo(() => {
     const schedule = teacherData.reduce((acc, teacher) => {
       acc[teacher.name] = timetable
         .filter(entry => entry.teacher === teacher.name)
-        .sort((a, b) => new Date(`1970-01-01T${a.time}:00`) - new Date(`1970-01-01T${b.time}:00`));
+        .sort(
+          (a, b) => new Date(`1970-01-01T${a.time}:00`) - new Date(`1970-01-01T${b.time}:00`)
+        );
       return acc;
     }, {});
-
     return schedule;
   }, [timetable, teacherData]);
- 
+
+  // Helper to calculate end time
   const calculateEndTime = (startTime, duration) => {
     const [hours, minutes] = startTime.split(':').map(Number);
+    const validDuration = isNaN(duration) || duration === '' ? 0 : duration;
     const endDate = new Date();
     endDate.setHours(hours);
-    endDate.setMinutes(minutes + duration);
+    endDate.setMinutes(minutes + validDuration);
     return endDate.toTimeString().substr(0, 5);
   };
- 
+
+  // Check recess period
   const isRecessTime = (time) => {
     const timeDate = new Date(`1970-01-01T${time}:00`);
     const recessStartDate = new Date(`1970-01-01T${timings.recessStart}:00`);
     const recessEndDate = new Date(`1970-01-01T${timings.recessEnd}:00`);
     return timeDate >= recessStartDate && timeDate < recessEndDate;
   };
- 
-  const isRecessStarting = (endTime) => {
-    return endTime === timings.recessStart;
-  };
-  
-   
+
+  const isRecessStarting = (endTime) => endTime === timings.recessStart;
+
+  // Download PDF
   const downloadPDF = (data, filename) => {
     const doc = new jsPDF();
     const tableColumn = ["Time", "End Time", "Subject", "Teacher"];
@@ -147,14 +155,16 @@ const Timetable = () => {
     doc.save(`${filename}.pdf`);
   };
 
+  // JSX UI
   return (
     <div>
       <h2>Generate Timetable</h2>
- 
+
+      {/* SCHOOL TIMINGS */}
       <div>
         <h3>School Timings</h3>
         {['opening', 'closing', 'recessStart', 'recessEnd'].map(timeType => (
-          <div key={timeType} style={{padding:"10px"}}>
+          <div key={timeType} style={{ padding: "10px" }}>
             <label>{`${timeType.replace(/([A-Z])/g, ' $1').toUpperCase()}:`}</label>
             <select
               value={timings[timeType]}
@@ -166,17 +176,30 @@ const Timetable = () => {
             </select>
           </div>
         ))}
+
         <div>
           <label>Class Duration (minutes):</label>
           <input
             type="number"
             name="classDuration"
-            value={timings.classDuration}
-            onChange={(e) => setTimings({ ...timings, classDuration: parseInt(e.target.value, 10) })}
+            value={
+              isNaN(timings.classDuration) || timings.classDuration === null
+                ? ''
+                : timings.classDuration
+            }
+            onChange={(e) => {
+              const value = e.target.value;
+              setTimings({
+                ...timings,
+                classDuration:
+                  value === '' ? '' : Math.max(0, parseInt(value, 10) || 0),
+              });
+            }}
           />
         </div>
       </div>
 
+      {/* TEACHER DATA */}
       <h3>Teacher Data</h3>
       {teacherData.map((teacher, index) => (
         <div key={index}>
@@ -196,8 +219,9 @@ const Timetable = () => {
           />
         </div>
       ))}
-      <button onClick={() => addRow('teacher')} style={{backgroundColor:"black", color:"white", borderRadius:"20px",marginTop:"10px",height:"2rem"}}>Add Teacher</button>
+      <button onClick={() => addRow('teacher')} style={{ backgroundColor: "black", color: "white", borderRadius: "20px", marginTop: "10px", height: "2rem" }}>Add Teacher</button>
 
+      {/* CLASS DATA */}
       <h3>Class Data</h3>
       {classData.map((classEntry, index) => (
         <div key={index}>
@@ -217,23 +241,26 @@ const Timetable = () => {
           />
         </div>
       ))}
-      <button onClick={() => addRow('class')} style={{backgroundColor:"black", color:"white", borderRadius:"20px",marginTop:"10px",height:"2rem"}}>Add Class</button>
+      <button onClick={() => addRow('class')} style={{ backgroundColor: "black", color: "white", borderRadius: "20px", marginTop: "10px", height: "2rem" }}>Add Class</button>
 
-      <button onClick={handleGenerateTimetable} style={{backgroundColor:"black", color:"white", borderRadius:"20px",marginTop:"10px", marginLeft:"10px",height:"2rem"}}>Generate Timetable</button>
+      {/* GENERATE BUTTON */}
+      <button onClick={handleGenerateTimetable} style={{ backgroundColor: "black", color: "white", borderRadius: "20px", marginTop: "10px", marginLeft: "10px", height: "2rem" }}>Generate Timetable</button>
 
-      <h3 style={{textAlign:"center", backgroundColor:"gray"}}>Timetable</h3>
+      {/* CLASS TIMETABLE DISPLAY */}
+      <h3 style={{ textAlign: "center", backgroundColor: "gray" }}>Timetable</h3>
       {Object.keys(groupedTimetable).length > 0 ? (
         Object.keys(groupedTimetable).map((className) => (
-          <div key={className} style={{textAlign:"center"}}>
-            <h4 style={{backgroundColor:"#9386b9" , borderRadius:"100px"}}>{className}</h4>
+          <div key={className} style={{ textAlign: "center" }}>
+            <h4 style={{ backgroundColor: "#9386b9", borderRadius: "100px" }}>{className}</h4>
             <table style={{
-    border: "solid 2px",
-    borderRadius: "10px",
-    margin: "0 auto",
-    width: "80%", 
-    textAlign: "center"}}>
+              border: "solid 2px",
+              borderRadius: "10px",
+              margin: "0 auto",
+              width: "80%",
+              textAlign: "center"
+            }}>
               <thead style={{ borderBottom: "5px solid black" }}>
-                <tr >
+                <tr>
                   <th>Subject</th>
                   <th>Teacher</th>
                   <th>Start Time</th>
@@ -260,26 +287,29 @@ const Timetable = () => {
                   );
                 })}
               </tbody>
-              
             </table>
-            <button onClick={() => downloadPDF(groupedTimetable[className], `Timetable_${className}`)} style={{backgroundColor:"black", color:"white", borderRadius:"20px",marginTop:"10px",height:"2rem"}}>Download {className} Timetable as PDF</button>
+            <button onClick={() => downloadPDF(groupedTimetable[className], `Timetable_${className}`)} style={{ backgroundColor: "black", color: "white", borderRadius: "20px", marginTop: "10px", height: "2rem" }}>Download {className} Timetable as PDF</button>
           </div>
         ))
       ) : (
         <p>No timetable generated yet.</p>
       )}
+
       <div style={{ borderBottom: '10px solid black', margin: '20px 0' }}></div>
-      <h3 style={{textAlign:"center", backgroundColor:"gray"}}>Teacher Schedule</h3>
+
+      {/* TEACHER SCHEDULE DISPLAY */}
+      <h3 style={{ textAlign: "center", backgroundColor: "gray" }}>Teacher Schedule</h3>
       {Object.keys(teacherSchedule).length > 0 ? (
         Object.keys(teacherSchedule).map((teacherName) => (
-          <div key={teacherName} style={{textAlign:"center"}}>
-            <h4 style={{backgroundColor:"#9386b9" , borderRadius:"100px"}}>{teacherName}</h4>
-            <table  style={{
-    border: "solid 2px",
-    borderRadius: "10px",
-    margin: "0 auto",
-    width: "80%",  
-    textAlign: "center"}}>
+          <div key={teacherName} style={{ textAlign: "center" }}>
+            <h4 style={{ backgroundColor: "#9386b9", borderRadius: "100px" }}>{teacherName}</h4>
+            <table style={{
+              border: "solid 2px",
+              borderRadius: "10px",
+              margin: "0 auto",
+              width: "80%",
+              textAlign: "center"
+            }}>
               <thead style={{ borderBottom: "5px solid black" }}>
                 <tr>
                   <th>Class</th>
@@ -309,18 +339,14 @@ const Timetable = () => {
                 })}
               </tbody>
             </table>
-            <button onClick={() => downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)} style={{backgroundColor:"black", color:"white", borderRadius:"20px",marginTop:"10px",height:"2rem"}}>Download {teacherName} Schedule as PDF</button>
+            <button onClick={() => downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)} style={{ backgroundColor: "black", color: "white", borderRadius: "20px", marginTop: "10px", height: "2rem" }}>Download {teacherName} Schedule as PDF</button>
           </div>
         ))
       ) : (
         <p>No schedule generated yet.</p>
       )}
-      
     </div>
-    
   );
 };
 
 export default Timetable;
-
-
