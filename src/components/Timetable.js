@@ -352,7 +352,6 @@
 // export default Timetable;
 
 import React, { useState, useMemo } from 'react';
-import { Clock, Calendar, Download, Plus, Users, BookOpen, School } from 'lucide-react';
 
 // Generate selectable time options
 const generateTimeOptions = (start, end, interval) => {
@@ -510,7 +509,7 @@ const Timetable = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <School className="w-12 h-12 text-indigo-600" />
+            <span className="text-6xl">🏫</span>
             <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Timetable Generator
             </h1>
@@ -521,7 +520,7 @@ const Timetable = () => {
         {/* School Timings Card */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-indigo-100">
           <div className="flex items-center gap-3 mb-6">
-            <Clock className="w-6 h-6 text-indigo-600" />
+            <span className="text-3xl">🕐</span>
             <h2 className="text-2xl font-bold text-gray-800">School Timings</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -565,7 +564,7 @@ const Timetable = () => {
         {/* Teacher Data Card */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-purple-100">
           <div className="flex items-center gap-3 mb-6">
-            <Users className="w-6 h-6 text-purple-600" />
+            <span className="text-3xl">👨‍🏫</span>
             <h2 className="text-2xl font-bold text-gray-800">Teacher Data</h2>
           </div>
           <div className="space-y-4">
@@ -592,9 +591,9 @@ const Timetable = () => {
           </div>
           <button
             onClick={() => addRow('teacher')}
-            className="mt-6 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
+            className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
           >
-            <Plus className="w-5 h-5" />
+            <span className="text-xl">➕</span>
             Add Teacher
           </button>
         </div>
@@ -602,7 +601,7 @@ const Timetable = () => {
         {/* Class Data Card */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-pink-100">
           <div className="flex items-center gap-3 mb-6">
-            <BookOpen className="w-6 h-6 text-pink-600" />
+            <span className="text-3xl">📚</span>
             <h2 className="text-2xl font-bold text-gray-800">Class Data</h2>
           </div>
           <div className="space-y-4">
@@ -629,9 +628,9 @@ const Timetable = () => {
           </div>
           <button
             onClick={() => addRow('class')}
-            className="mt-6 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
+            className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
           >
-            <Plus className="w-5 h-5" />
+            <span className="text-xl">➕</span>
             Add Class
           </button>
         </div>
@@ -642,7 +641,7 @@ const Timetable = () => {
             onClick={handleGenerateTimetable}
             className="inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-lg font-bold rounded-full hover:shadow-2xl hover:scale-105 transition-all"
           >
-            <Calendar className="w-6 h-6" />
+            <span className="text-2xl">📅</span>
             Generate Timetable
           </button>
         </div>
@@ -693,9 +692,9 @@ const Timetable = () => {
                   </div>
                   <button
                     onClick={() => downloadPDF(groupedTimetable[className], `Timetable_${className}`)}
-                    className="mt-6 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all mx-auto"
+                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all mx-auto"
                   >
-                    <Download className="w-5 h-5" />
+                    <span className="text-xl">📥</span>
                     Download {className} Timetable
                   </button>
                 </div>
@@ -750,9 +749,9 @@ const Timetable = () => {
                   </div>
                   <button
                     onClick={() => downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)}
-                    className="mt-6 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all mx-auto"
+                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all mx-auto"
                   >
-                    <Download className="w-5 h-5" />
+                    <span className="text-xl">📥</span>
                     Download {teacherName} Schedule
                   </button>
                 </div>
@@ -763,7 +762,7 @@ const Timetable = () => {
 
         {Object.keys(groupedTimetable).length === 0 && (
           <div className="text-center py-16">
-            <Calendar className="w-24 h-24 text-gray-300 mx-auto mb-4" />
+            <span className="text-9xl block mb-4">📅</span>
             <p className="text-xl text-gray-500">No timetable generated yet. Fill in the details and click Generate!</p>
           </div>
         )}
@@ -773,5 +772,3 @@ const Timetable = () => {
 };
 
 export default Timetable;
-
-
