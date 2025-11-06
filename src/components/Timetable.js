@@ -352,8 +352,6 @@
 // export default Timetable;
 
 import React, { useState, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 // Generate selectable time options
 const generateTimeOptions = (start, end, interval) => {
@@ -514,9 +512,71 @@ const Timetable = () => {
 
   const isRecessStarting = (endTime) => endTime === timings.recessStart;
 
-  // Download PDF (placeholder - requires jsPDF)
+  // Download PDF with jsPDF
   const downloadPDF = (data, filename) => {
-    alert('PDF download feature requires jsPDF library to be installed.');
+    // Load jsPDF dynamically if not already loaded
+    if (typeof window.jspdf === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = () => {
+        const autoTableScript = document.createElement('script');
+        autoTableScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js';
+        autoTableScript.onload = () => generatePDF(data, filename);
+        document.head.appendChild(autoTableScript);
+      };
+      document.head.appendChild(script);
+    } else {
+      generatePDF(data, filename);
+    }
+  };
+
+  const generatePDF = (data, filename) => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(102, 126, 234);
+    doc.text(filename.replace(/_/g, ' '), 14, 15);
+    
+    // Prepare table data
+    const tableColumn = ["Start Time", "End Time", "Subject", "Teacher/Class"];
+    const tableRows = data.map(entry => {
+      const startTime = minutesToTime(timeToMinutes(entry.time));
+      const endTime = calculateEndTime(entry.time, timings.classDuration);
+      const subjectOrClass = entry.class || entry.subject;
+      const teacherOrSubject = entry.teacher || entry.subject;
+      
+      return [
+        startTime,
+        endTime,
+        subjectOrClass,
+        typeof teacherOrSubject === 'object' ? 'Unscheduled' : teacherOrSubject
+      ];
+    });
+    
+    // Generate table
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [102, 126, 234],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 5
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251]
+      }
+    });
+    
+    doc.save(`${filename}.pdf`);
   };
 
   return (
