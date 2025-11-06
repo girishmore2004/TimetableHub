@@ -352,6 +352,8 @@
 // export default Timetable;
 
 import React, { useState, useMemo } from 'react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // Generate selectable time options
 const generateTimeOptions = (start, end, interval) => {
