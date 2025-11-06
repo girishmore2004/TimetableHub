@@ -373,16 +373,16 @@ const timeToMinutes = (time) => {
   return h * 60 + m;
 };
 
-// Convert minutes to HH:MM (removing timezone offset)
+// Convert total minutes to HH:MM and ADD 5:30 hrs offset
 const minutesToTime = (totalMinutes) => {
-  // 🧭 Remove 5 hours 30 minutes timezone offset (330 minutes)
-  totalMinutes = (totalMinutes - 330 + 24 * 60) % (24 * 60);
+  // 🧭 ADD 330 minutes for IST offset
+  totalMinutes = (totalMinutes + 330) % (24 * 60);
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
 
-// Calculate end time manually
+// Calculate end time (adding offset)
 const calculateEndTime = (startTime, duration) => {
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = startMinutes + duration;
@@ -403,14 +403,14 @@ const Timetable = () => {
 
   const timeOptions = useMemo(() => generateTimeOptions(0, 23, 15), []);
 
-  // Handle input changes
+  // Handle input changes for teacher/class
   const handleInputChange = (type, index, event) => {
     const value = event.target.value;
     const updatedData = [...(type === 'teacher' ? teacherData : classData)];
     const target = updatedData[index];
 
     if (event.target.name === 'subjects') {
-      target.subjects = value.split(',').map((sub) => sub.trim());
+      target.subjects = value.split(',').map(sub => sub.trim());
     } else {
       target[event.target.name] = value;
     }
@@ -419,14 +419,14 @@ const Timetable = () => {
     else setClassData(updatedData);
   };
 
-  // Add teacher/class
+  // Add a new row for teacher or class
   const addRow = (type) => {
     const newRow = { name: '', subjects: [] };
     if (type === 'teacher') setTeacherData([...teacherData, newRow]);
     else setClassData([...classData, newRow]);
   };
 
-  // Generate timetable
+  // Generate timetable via backend API
   const handleGenerateTimetable = async () => {
     if (!timings.opening || !timings.closing || !timings.recessStart || !timings.recessEnd) {
       alert('Please set all school timings before generating the timetable.');
@@ -434,14 +434,11 @@ const Timetable = () => {
     }
 
     try {
-      const response = await fetch(
-        'https://timetablehub-backend-production.up.railway.app/api/timetable/generate',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ teacherData, classData, timings }),
-        }
-      );
+      const response = await fetch('https://timetablehub-backend-production.up.railway.app/api/timetable/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherData, classData, timings }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -450,14 +447,12 @@ const Timetable = () => {
 
       const data = await response.json();
 
-      const styledData = data.map((entry) => ({
+      const styledData = data.map(entry => ({
         ...entry,
         teacher:
-          entry.teacher === 'Unscheduled' ? (
-            <span style={{ color: 'red' }}>Unscheduled</span>
-          ) : (
-            entry.teacher
-          ),
+          entry.teacher === 'Unscheduled'
+            ? <span style={{ color: 'red' }}>Unscheduled</span>
+            : entry.teacher,
       }));
 
       setTimetable(styledData);
@@ -466,7 +461,7 @@ const Timetable = () => {
     }
   };
 
-  // Group by class
+  // Group timetable by class
   const groupedTimetable = useMemo(() => {
     const groupedByClass = timetable.reduce((acc, entry) => {
       if (!acc[entry.class]) acc[entry.class] = [];
@@ -487,14 +482,16 @@ const Timetable = () => {
   const teacherSchedule = useMemo(() => {
     const schedule = teacherData.reduce((acc, teacher) => {
       acc[teacher.name] = timetable
-        .filter((entry) => entry.teacher === teacher.name)
-        .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+        .filter(entry => entry.teacher === teacher.name)
+        .sort(
+          (a, b) => timeToMinutes(a.time) - timeToMinutes(b.time)
+        );
       return acc;
     }, {});
     return schedule;
   }, [timetable, teacherData]);
 
-  // Recess detection
+  // Check recess period
   const isRecessTime = (time) => {
     const t = timeToMinutes(time);
     const recessStart = timeToMinutes(timings.recessStart);
@@ -504,11 +501,11 @@ const Timetable = () => {
 
   const isRecessStarting = (endTime) => endTime === timings.recessStart;
 
-  // Download as PDF
+  // Download PDF
   const downloadPDF = (data, filename) => {
     const doc = new jsPDF();
-    const tableColumn = ['Start Time', 'End Time', 'Subject', 'Teacher'];
-    const tableRows = data.map((entry) => [
+    const tableColumn = ["Start Time", "End Time", "Subject", "Teacher"];
+    const tableRows = data.map(entry => [
       minutesToTime(timeToMinutes(entry.time)),
       calculateEndTime(entry.time, timings.classDuration),
       entry.subject,
@@ -525,19 +522,15 @@ const Timetable = () => {
       {/* SCHOOL TIMINGS */}
       <div>
         <h3>School Timings</h3>
-        {['opening', 'closing', 'recessStart', 'recessEnd'].map((timeType) => (
-          <div key={timeType} style={{ padding: '10px' }}>
+        {['opening', 'closing', 'recessStart', 'recessEnd'].map(timeType => (
+          <div key={timeType} style={{ padding: "10px" }}>
             <label>{`${timeType.replace(/([A-Z])/g, ' $1').toUpperCase()}:`}</label>
             <select
               value={timings[timeType]}
-              onChange={(e) =>
-                setTimings({ ...timings, [timeType]: e.target.value })
-              }
+              onChange={(e) => setTimings({ ...timings, [timeType]: e.target.value })}
             >
-              {timeOptions.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
+              {timeOptions.map(time => (
+                <option key={time} value={time}>{time}</option>
               ))}
             </select>
           </div>
@@ -551,7 +544,7 @@ const Timetable = () => {
             onChange={(e) =>
               setTimings({
                 ...timings,
-                classDuration: parseInt(e.target.value, 10),
+                classDuration: parseInt(e.target.value, 10) || 0,
               })
             }
           />
@@ -606,18 +599,16 @@ const Timetable = () => {
         Add Class
       </button>
 
-      <button
-        onClick={handleGenerateTimetable}
-        style={{ ...buttonStyle, marginLeft: '10px' }}
-      >
+      {/* GENERATE BUTTON */}
+      <button onClick={handleGenerateTimetable} style={{ ...buttonStyle, marginLeft: '10px' }}>
         Generate Timetable
       </button>
 
-      {/* DISPLAY TIMETABLE */}
+      {/* CLASS TIMETABLE DISPLAY */}
       <h3 style={headerStyle}>Timetable</h3>
       {Object.keys(groupedTimetable).length > 0 ? (
         Object.keys(groupedTimetable).map((className) => (
-          <div key={className} style={{ textAlign: 'center' }}>
+          <div key={className} style={{ textAlign: "center" }}>
             <h4 style={subHeaderStyle}>{className}</h4>
             <table style={tableStyle}>
               <thead style={theadStyle}>
@@ -630,10 +621,7 @@ const Timetable = () => {
               </thead>
               <tbody>
                 {groupedTimetable[className].map((entry, index) => {
-                  const endTime = calculateEndTime(
-                    entry.time,
-                    timings.classDuration
-                  );
+                  const endTime = calculateEndTime(entry.time, timings.classDuration);
                   return (
                     <React.Fragment key={index}>
                       <tr
@@ -661,9 +649,7 @@ const Timetable = () => {
               </tbody>
             </table>
             <button
-              onClick={() =>
-                downloadPDF(groupedTimetable[className], `Timetable_${className}`)
-              }
+              onClick={() => downloadPDF(groupedTimetable[className], `Timetable_${className}`)}
               style={buttonStyle}
             >
               Download {className} Timetable as PDF
@@ -674,11 +660,11 @@ const Timetable = () => {
         <p>No timetable generated yet.</p>
       )}
 
-      {/* TEACHER SCHEDULE */}
+      {/* TEACHER SCHEDULE DISPLAY */}
       <h3 style={headerStyle}>Teacher Schedule</h3>
       {Object.keys(teacherSchedule).length > 0 ? (
         Object.keys(teacherSchedule).map((teacherName) => (
-          <div key={teacherName} style={{ textAlign: 'center' }}>
+          <div key={teacherName} style={{ textAlign: "center" }}>
             <h4 style={subHeaderStyle}>{teacherName}</h4>
             <table style={tableStyle}>
               <thead style={theadStyle}>
@@ -691,10 +677,7 @@ const Timetable = () => {
               </thead>
               <tbody>
                 {teacherSchedule[teacherName].map((entry, index) => {
-                  const endTime = calculateEndTime(
-                    entry.time,
-                    timings.classDuration
-                  );
+                  const endTime = calculateEndTime(entry.time, timings.classDuration);
                   return (
                     <React.Fragment key={index}>
                       <tr
@@ -722,9 +705,7 @@ const Timetable = () => {
               </tbody>
             </table>
             <button
-              onClick={() =>
-                downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)
-              }
+              onClick={() => downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)}
               style={buttonStyle}
             >
               Download {teacherName} Schedule as PDF
@@ -738,25 +719,19 @@ const Timetable = () => {
   );
 };
 
-// Styling
+// Styles
 const buttonStyle = {
-  backgroundColor: 'black',
-  color: 'white',
-  borderRadius: '20px',
-  marginTop: '10px',
-  height: '2rem',
-  cursor: 'pointer',
+  backgroundColor: "black",
+  color: "white",
+  borderRadius: "20px",
+  marginTop: "10px",
+  height: "2rem",
+  cursor: "pointer"
 };
-const headerStyle = { textAlign: 'center', backgroundColor: 'gray' };
-const subHeaderStyle = { backgroundColor: '#9386b9', borderRadius: '100px' };
-const tableStyle = {
-  border: '2px solid',
-  borderRadius: '10px',
-  margin: '0 auto',
-  width: '80%',
-  textAlign: 'center',
-};
-const theadStyle = { borderBottom: '3px solid black' };
+const headerStyle = { textAlign: "center", backgroundColor: "gray" };
+const subHeaderStyle = { backgroundColor: "#9386b9", borderRadius: "100px" };
+const tableStyle = { border: "2px solid", borderRadius: "10px", margin: "0 auto", width: "80%", textAlign: "center" };
+const theadStyle = { borderBottom: "3px solid black" };
 
 export default Timetable;
 
