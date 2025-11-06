@@ -5,7 +5,7 @@ const cors = require('cors');
 
 const app = express();  
 const corsOptions = {
-  origin: 'https://timetable-hub.vercel.app/', // replace with your Netlify site URL
+  origin: 'https://timetable-hub.vercel.app', // replace with your Netlify site URL
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 };
@@ -15,6 +15,9 @@ app.use(express.json());
 db.connect();
  
 app.use('/api/timetable', timetableRoutes);
+app.get('/', (req, res) => {
+  res.send('Timetable Backend Running ✅');
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
