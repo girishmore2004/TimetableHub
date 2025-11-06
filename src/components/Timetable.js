@@ -397,6 +397,7 @@ const Timetable = () => {
     recessEnd: '',
     classDuration: 30,
   });
+  const [loading, setLoading] = useState(false);
 
   const timeOptions = useMemo(() => generateTimeOptions(0, 23, 15), []);
 
@@ -416,6 +417,15 @@ const Timetable = () => {
     else setClassData(updatedData);
   };
 
+  // Delete a row
+  const deleteRow = (type, index) => {
+    if (type === 'teacher') {
+      setTeacherData(teacherData.filter((_, i) => i !== index));
+    } else {
+      setClassData(classData.filter((_, i) => i !== index));
+    }
+  };
+
   // Add a new row for teacher or class
   const addRow = (type) => {
     const newRow = { name: '', subjects: [] };
@@ -430,6 +440,7 @@ const Timetable = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const response = await fetch('https://timetablehub-backend-production.up.railway.app/api/timetable/generate', {
         method: 'POST',
@@ -448,13 +459,16 @@ const Timetable = () => {
         ...entry,
         teacher:
           entry.teacher === 'Unscheduled'
-            ? <span style={{ color: '#ef4444' }}>Unscheduled</span>
+            ? <span style={{ color: '#ef4444', fontWeight: '600' }}>Unscheduled</span>
             : entry.teacher,
       }));
 
       setTimetable(styledData);
     } catch (error) {
       console.error('Error generating timetable:', error.message);
+      alert('Failed to generate timetable. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -498,277 +512,467 @@ const Timetable = () => {
 
   const isRecessStarting = (endTime) => endTime === timings.recessStart;
 
-  // Download PDF (placeholder - jsPDF not available)
+  // Download PDF (placeholder - requires jsPDF)
   const downloadPDF = (data, filename) => {
-    alert(`PDF download functionality requires jsPDF library. Filename: ${filename}.pdf`);
+    alert('PDF download feature requires jsPDF library to be installed.');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="text-6xl">🏫</span>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Timetable Generator
-            </h1>
-          </div>
-          <p className="text-gray-600 text-lg">Create organized schedules for teachers and classes</p>
-        </div>
-
-        {/* School Timings Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-indigo-100">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl">🕐</span>
-            <h2 className="text-2xl font-bold text-gray-800">School Timings</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {['opening', 'closing', 'recessStart', 'recessEnd'].map(timeType => (
-              <div key={timeType}>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 capitalize">
-                  {timeType.replace(/([A-Z])/g, ' $1')}
-                </label>
-                <select
-                  value={timings[timeType]}
-                  onChange={(e) => setTimings({ ...timings, [timeType]: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
-                >
-                  <option value="">Select time</option>
-                  {timeOptions.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Class Duration (minutes)
-              </label>
-              <input
-                type="number"
-                name="classDuration"
-                value={timings.classDuration}
-                onChange={(e) =>
-                  setTimings({
-                    ...timings,
-                    classDuration: parseInt(e.target.value, 10) || 0,
-                  })
-                }
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Teacher Data Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-purple-100">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl">👨‍🏫</span>
-            <h2 className="text-2xl font-bold text-gray-800">Teacher Data</h2>
-          </div>
-          <div className="space-y-4">
-            {teacherData.map((teacher, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-purple-50 rounded-2xl">
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Teacher Name"
-                  value={teacher.name}
-                  onChange={(event) => handleInputChange('teacher', index, event)}
-                  className="px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
-                />
-                <input
-                  type="text"
-                  name="subjects"
-                  placeholder="Subjects (comma separated)"
-                  value={teacher.subjects.join(', ')}
-                  onChange={(event) => handleInputChange('teacher', index, event)}
-                  className="px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
-                />
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => addRow('teacher')}
-            className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <span className="text-xl">➕</span>
-            Add Teacher
-          </button>
-        </div>
-
-        {/* Class Data Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-pink-100">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl">📚</span>
-            <h2 className="text-2xl font-bold text-gray-800">Class Data</h2>
-          </div>
-          <div className="space-y-4">
-            {classData.map((classEntry, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-pink-50 rounded-2xl">
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Class Name"
-                  value={classEntry.name}
-                  onChange={(event) => handleInputChange('class', index, event)}
-                  className="px-4 py-3 bg-white border-2 border-pink-200 rounded-xl focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all outline-none"
-                />
-                <input
-                  type="text"
-                  name="subjects"
-                  placeholder="Subjects (comma separated)"
-                  value={classEntry.subjects.join(', ')}
-                  onChange={(event) => handleInputChange('class', index, event)}
-                  className="px-4 py-3 bg-white border-2 border-pink-200 rounded-xl focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all outline-none"
-                />
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => addRow('class')}
-            className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <span className="text-xl">➕</span>
-            Add Class
-          </button>
-        </div>
-
-        {/* Generate Button */}
-        <div className="text-center mb-12">
-          <button
-            onClick={handleGenerateTimetable}
-            className="inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-lg font-bold rounded-full hover:shadow-2xl hover:scale-105 transition-all"
-          >
-            <span className="text-2xl">📅</span>
-            Generate Timetable
-          </button>
-        </div>
-
-        {/* Class Timetable Display */}
-        {Object.keys(groupedTimetable).length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Class Timetables</h2>
-            <div className="space-y-8">
-              {Object.keys(groupedTimetable).map((className) => (
-                <div key={className} className="bg-white rounded-3xl shadow-xl p-8 border border-indigo-100">
-                  <h3 className="text-2xl font-bold text-center mb-6 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full inline-block">
-                    {className}
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-gradient-to-r from-indigo-100 to-purple-100">
-                          <th className="px-6 py-4 text-left font-bold text-gray-700 rounded-tl-2xl">Subject</th>
-                          <th className="px-6 py-4 text-left font-bold text-gray-700">Teacher</th>
-                          <th className="px-6 py-4 text-left font-bold text-gray-700">Start Time</th>
-                          <th className="px-6 py-4 text-left font-bold text-gray-700 rounded-tr-2xl">End Time</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {groupedTimetable[className].map((entry, index) => {
-                          const endTime = calculateEndTime(entry.time, timings.classDuration);
-                          return (
-                            <React.Fragment key={index}>
-                              <tr className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isRecessTime(entry.time) ? 'bg-blue-50' : ''}`}>
-                                <td className="px-6 py-4 font-medium text-gray-800">{entry.subject}</td>
-                                <td className="px-6 py-4 text-gray-700">{entry.teacher}</td>
-                                <td className="px-6 py-4 text-gray-700">{minutesToTime(timeToMinutes(entry.time))}</td>
-                                <td className="px-6 py-4 text-gray-700">{endTime}</td>
-                              </tr>
-                              {isRecessStarting(endTime) && (
-                                <tr className="bg-gradient-to-r from-blue-100 to-cyan-100">
-                                  <td colSpan="4" className="px-6 py-4 text-center font-bold text-blue-800">
-                                    🍽️ Break Time
-                                  </td>
-                                </tr>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  <button
-                    onClick={() => downloadPDF(groupedTimetable[className], `Timetable_${className}`)}
-                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all mx-auto"
-                  >
-                    <span className="text-xl">📥</span>
-                    Download {className} Timetable
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Teacher Schedule Display */}
-        {Object.keys(teacherSchedule).length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Teacher Schedules</h2>
-            <div className="space-y-8">
-              {Object.keys(teacherSchedule).map((teacherName) => (
-                <div key={teacherName} className="bg-white rounded-3xl shadow-xl p-8 border border-purple-100">
-                  <h3 className="text-2xl font-bold text-center mb-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full inline-block">
-                    {teacherName}
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-gradient-to-r from-purple-100 to-pink-100">
-                          <th className="px-6 py-4 text-left font-bold text-gray-700 rounded-tl-2xl">Class</th>
-                          <th className="px-6 py-4 text-left font-bold text-gray-700">Subject</th>
-                          <th className="px-6 py-4 text-left font-bold text-gray-700">Start Time</th>
-                          <th className="px-6 py-4 text-left font-bold text-gray-700 rounded-tr-2xl">End Time</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {teacherSchedule[teacherName].map((entry, index) => {
-                          const endTime = calculateEndTime(entry.time, timings.classDuration);
-                          return (
-                            <React.Fragment key={index}>
-                              <tr className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isRecessTime(entry.time) ? 'bg-blue-50' : ''}`}>
-                                <td className="px-6 py-4 font-medium text-gray-800">{entry.class}</td>
-                                <td className="px-6 py-4 text-gray-700">{entry.subject}</td>
-                                <td className="px-6 py-4 text-gray-700">{minutesToTime(timeToMinutes(entry.time))}</td>
-                                <td className="px-6 py-4 text-gray-700">{endTime}</td>
-                              </tr>
-                              {isRecessStarting(endTime) && (
-                                <tr className="bg-gradient-to-r from-blue-100 to-cyan-100">
-                                  <td colSpan="4" className="px-6 py-4 text-center font-bold text-blue-800">
-                                    🍽️ Break Time
-                                  </td>
-                                </tr>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  <button
-                    onClick={() => downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)}
-                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all mx-auto"
-                  >
-                    <span className="text-xl">📥</span>
-                    Download {teacherName} Schedule
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {Object.keys(groupedTimetable).length === 0 && (
-          <div className="text-center py-16">
-            <span className="text-9xl block mb-4">📅</span>
-            <p className="text-xl text-gray-500">No timetable generated yet. Fill in the details and click Generate!</p>
-          </div>
-        )}
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={styles.mainTitle}>📚 Timetable Generator</h1>
+        <p style={styles.subtitle}>Create and manage school schedules effortlessly</p>
       </div>
+
+      {/* SCHOOL TIMINGS */}
+      <div style={styles.card}>
+        <h2 style={styles.cardTitle}>⏰ School Timings</h2>
+        <div style={styles.timingsGrid}>
+          {[
+            { key: 'opening', label: 'Opening Time' },
+            { key: 'closing', label: 'Closing Time' },
+            { key: 'recessStart', label: 'Recess Start' },
+            { key: 'recessEnd', label: 'Recess End' }
+          ].map(({ key, label }) => (
+            <div key={key} style={styles.inputGroup}>
+              <label style={styles.label}>{label}</label>
+              <select
+                style={styles.select}
+                value={timings[key]}
+                onChange={(e) => setTimings({ ...timings, [key]: e.target.value })}
+              >
+                <option value="">Select time</option>
+                {timeOptions.map(time => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Class Duration (min)</label>
+            <input
+              style={styles.input}
+              type="number"
+              value={timings.classDuration}
+              onChange={(e) =>
+                setTimings({
+                  ...timings,
+                  classDuration: parseInt(e.target.value, 10) || 0,
+                })
+              }
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* TEACHER DATA */}
+      <div style={styles.card}>
+        <h2 style={styles.cardTitle}>👨‍🏫 Teacher Information</h2>
+        {teacherData.map((teacher, index) => (
+          <div key={index} style={styles.dataRow}>
+            <input
+              style={styles.input}
+              type="text"
+              name="name"
+              placeholder="Teacher Name"
+              value={teacher.name}
+              onChange={(event) => handleInputChange('teacher', index, event)}
+            />
+            <input
+              style={{...styles.input, flex: 2}}
+              type="text"
+              name="subjects"
+              placeholder="Subjects (comma separated)"
+              value={teacher.subjects.join(', ')}
+              onChange={(event) => handleInputChange('teacher', index, event)}
+            />
+            <button 
+              onClick={() => deleteRow('teacher', index)}
+              style={styles.deleteBtn}
+              title="Delete"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button onClick={() => addRow('teacher')} style={styles.addBtn}>
+          ➕ Add Teacher
+        </button>
+      </div>
+
+      {/* CLASS DATA */}
+      <div style={styles.card}>
+        <h2 style={styles.cardTitle}>🎓 Class Information</h2>
+        {classData.map((classEntry, index) => (
+          <div key={index} style={styles.dataRow}>
+            <input
+              style={styles.input}
+              type="text"
+              name="name"
+              placeholder="Class Name"
+              value={classEntry.name}
+              onChange={(event) => handleInputChange('class', index, event)}
+            />
+            <input
+              style={{...styles.input, flex: 2}}
+              type="text"
+              name="subjects"
+              placeholder="Subjects (comma separated)"
+              value={classEntry.subjects.join(', ')}
+              onChange={(event) => handleInputChange('class', index, event)}
+            />
+            <button 
+              onClick={() => deleteRow('class', index)}
+              style={styles.deleteBtn}
+              title="Delete"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button onClick={() => addRow('class')} style={styles.addBtn}>
+          ➕ Add Class
+        </button>
+      </div>
+
+      {/* GENERATE BUTTON */}
+      <div style={styles.generateSection}>
+        <button 
+          onClick={handleGenerateTimetable} 
+          style={{...styles.generateBtn, opacity: loading ? 0.7 : 1}}
+          disabled={loading}
+        >
+          {loading ? '⏳ Generating...' : '✨ Generate Timetable'}
+        </button>
+      </div>
+
+      {/* CLASS TIMETABLE DISPLAY */}
+      {Object.keys(groupedTimetable).length > 0 && (
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>📅 Class Timetables</h2>
+          {Object.keys(groupedTimetable).map((className) => (
+            <div key={className} style={styles.timetableSection}>
+              <h3 style={styles.className}>{className}</h3>
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr style={styles.tableHeader}>
+                      <th style={styles.th}>Subject</th>
+                      <th style={styles.th}>Teacher</th>
+                      <th style={styles.th}>Start Time</th>
+                      <th style={styles.th}>End Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupedTimetable[className].map((entry, index) => {
+                      const endTime = calculateEndTime(entry.time, timings.classDuration);
+                      return (
+                        <React.Fragment key={index}>
+                          <tr
+                            style={{
+                              ...styles.tableRow,
+                              backgroundColor: isRecessTime(entry.time)
+                                ? '#dbeafe'
+                                : index % 2 === 0 ? '#f9fafb' : 'white',
+                            }}
+                          >
+                            <td style={styles.td}>{entry.subject}</td>
+                            <td style={styles.td}>{entry.teacher}</td>
+                            <td style={styles.td}>{minutesToTime(timeToMinutes(entry.time))}</td>
+                            <td style={styles.td}>{endTime}</td>
+                          </tr>
+                          {isRecessStarting(endTime) && (
+                            <tr style={styles.recessRow}>
+                              <td colSpan="4" style={styles.recessCell}>
+                                ☕ Break Time
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                onClick={() => downloadPDF(groupedTimetable[className], `Timetable_${className}`)}
+                style={styles.downloadBtn}
+              >
+                📥 Download {className} Timetable
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* TEACHER SCHEDULE DISPLAY */}
+      {Object.keys(teacherSchedule).length > 0 && (
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>👥 Teacher Schedules</h2>
+          {Object.keys(teacherSchedule).map((teacherName) => (
+            teacherSchedule[teacherName].length > 0 && (
+              <div key={teacherName} style={styles.timetableSection}>
+                <h3 style={styles.teacherName}>{teacherName}</h3>
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr style={styles.tableHeader}>
+                        <th style={styles.th}>Class</th>
+                        <th style={styles.th}>Subject</th>
+                        <th style={styles.th}>Start Time</th>
+                        <th style={styles.th}>End Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teacherSchedule[teacherName].map((entry, index) => {
+                        const endTime = calculateEndTime(entry.time, timings.classDuration);
+                        return (
+                          <React.Fragment key={index}>
+                            <tr
+                              style={{
+                                ...styles.tableRow,
+                                backgroundColor: isRecessTime(entry.time)
+                                  ? '#dbeafe'
+                                  : index % 2 === 0 ? '#f9fafb' : 'white',
+                              }}
+                            >
+                              <td style={styles.td}>{entry.class}</td>
+                              <td style={styles.td}>{entry.subject}</td>
+                              <td style={styles.td}>{minutesToTime(timeToMinutes(entry.time))}</td>
+                              <td style={styles.td}>{endTime}</td>
+                            </tr>
+                            {isRecessStarting(endTime) && (
+                              <tr style={styles.recessRow}>
+                                <td colSpan="4" style={styles.recessCell}>
+                                  ☕ Break Time
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  onClick={() => downloadPDF(teacherSchedule[teacherName], `Schedule_${teacherName}`)}
+                  style={styles.downloadBtn}
+                >
+                  📥 Download {teacherName} Schedule
+                </button>
+              </div>
+            )
+          ))}
+        </div>
+      )}
     </div>
   );
+};
+
+// Styles
+const styles = {
+  container: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '20px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    backgroundColor: '#f3f4f6',
+    minHeight: '100vh',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '40px',
+    padding: '30px 20px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    borderRadius: '16px',
+    color: 'white',
+    boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)',
+  },
+  mainTitle: {
+    fontSize: '2.5rem',
+    margin: '0 0 10px 0',
+    fontWeight: '700',
+  },
+  subtitle: {
+    fontSize: '1.1rem',
+    margin: 0,
+    opacity: 0.95,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '24px',
+    marginBottom: '24px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  },
+  cardTitle: {
+    fontSize: '1.5rem',
+    marginBottom: '20px',
+    color: '#1f2937',
+    borderBottom: '3px solid #667eea',
+    paddingBottom: '10px',
+    fontWeight: '600',
+  },
+  timingsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  label: {
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '6px',
+  },
+  select: {
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '2px solid #e5e7eb',
+    fontSize: '1rem',
+    transition: 'border-color 0.2s',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+  },
+  input: {
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '2px solid #e5e7eb',
+    fontSize: '1rem',
+    transition: 'border-color 0.2s',
+    flex: 1,
+  },
+  dataRow: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '12px',
+    alignItems: 'center',
+  },
+  deleteBtn: {
+    backgroundColor: '#ef4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 16px',
+    cursor: 'pointer',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    transition: 'background-color 0.2s',
+  },
+  addBtn: {
+    backgroundColor: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '12px 24px',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    fontWeight: '600',
+    marginTop: '8px',
+    transition: 'background-color 0.2s, transform 0.1s',
+  },
+  generateSection: {
+    textAlign: 'center',
+    margin: '40px 0',
+  },
+  generateBtn: {
+    backgroundColor: '#8b5cf6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '16px 48px',
+    cursor: 'pointer',
+    fontSize: '1.2rem',
+    fontWeight: '700',
+    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)',
+    transition: 'all 0.2s',
+  },
+  sectionTitle: {
+    fontSize: '1.75rem',
+    marginBottom: '30px',
+    color: '#1f2937',
+    textAlign: 'center',
+    fontWeight: '700',
+  },
+  timetableSection: {
+    marginBottom: '40px',
+  },
+  className: {
+    fontSize: '1.3rem',
+    color: '#667eea',
+    marginBottom: '16px',
+    fontWeight: '700',
+    textAlign: 'center',
+    backgroundColor: '#ede9fe',
+    padding: '12px',
+    borderRadius: '8px',
+  },
+  teacherName: {
+    fontSize: '1.3rem',
+    color: '#764ba2',
+    marginBottom: '16px',
+    fontWeight: '700',
+    textAlign: 'center',
+    backgroundColor: '#fce7f3',
+    padding: '12px',
+    borderRadius: '8px',
+  },
+  tableWrapper: {
+    overflowX: 'auto',
+    marginBottom: '16px',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  tableHeader: {
+    backgroundColor: '#667eea',
+    color: 'white',
+  },
+  th: {
+    padding: '14px 16px',
+    textAlign: 'left',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+  },
+  tableRow: {
+    transition: 'background-color 0.2s',
+  },
+  td: {
+    padding: '12px 16px',
+    borderBottom: '1px solid #e5e7eb',
+    fontSize: '0.95rem',
+    color: '#374151',
+  },
+  recessRow: {
+    backgroundColor: '#bfdbfe',
+  },
+  recessCell: {
+    padding: '12px',
+    textAlign: 'center',
+    fontWeight: '700',
+    color: '#1e40af',
+    fontSize: '1rem',
+  },
+  downloadBtn: {
+    backgroundColor: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 20px',
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    display: 'block',
+    margin: '0 auto',
+    transition: 'background-color 0.2s',
+  },
 };
 
 export default Timetable;
