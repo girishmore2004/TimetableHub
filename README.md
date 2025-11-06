@@ -1,70 +1,310 @@
-# Getting Started with Create React App
+ 
+# 🕒 TimetableHub – Smart Timetable Generator  
 
-[Published Website Check out](https://timetablehub.netlify.app/).
+<p align="center">
+  <img src="https://img.shields.io/github/license/girishmore2004/TimetableHub?style=for-the-badge&color=blue" />
+  <img src="https://img.shields.io/github/last-commit/girishmore2004/TimetableHub?style=for-the-badge&color=green" />
+  <img src="https://img.shields.io/github/languages/top/girishmore2004/TimetableHub?style=for-the-badge&color=yellow" />
+  <img src="https://img.shields.io/github/repo-size/girishmore2004/TimetableHub?style=for-the-badge&color=orange" />
+  <img src="https://img.shields.io/badge/Stack-MERN-blueviolet?style=for-the-badge" />
+</p>
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Live Demo  
 
-### `npm start`
+| Platform | URL |
+|-----------|-----|
+| 🌐 **Frontend (Vercel)** | [https://timetable-hub.vercel.app](https://timetable-hub.vercel.app) |
+| ⚙️ **Backend (Railway)** | [https://timetablehub-backend-production.up.railway.app](https://timetablehub-backend-production.up.railway.app) |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🏗️ Project Overview  
 
-### `npm test`
+**TimetableHub** is a powerful **MERN Stack-based web application** that automatically generates optimized school or college timetables.  
+Users can input **teachers**, **classes**, **subjects**, and **school timings** — and the system intelligently creates a balanced timetable with no overlaps, including **PDF exports** for printing or sharing.  
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🧩 Project Architecture  
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+TimetableHub/
+│
+├── /frontend                   # React app (Bootstrap UI)
+│   ├── /src
+│   │   ├── components/
+│   │   │   └── Timetable.js    # Main timetable generator logic
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+│
+├── /backend                    # Node.js + Express server
+│   ├── server.js
+│   ├── config/
+│   │   └── db.js               # MongoDB connection setup
+│   ├── routes/
+│   │   └── timetableRoutes.js  # API route for timetable generation
+│   ├── models/
+│   │   └── Timetable.js        # Mongoose model (if persistence needed)
+│   └── package.json
+│
+└── README.md
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+````
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## ⚙️ Tech Stack  
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Layer | Technology |
+|:------|:------------|
+| 🎨 **Frontend** | React.js + Bootstrap |
+| ⚙️ **Backend** | Node.js + Express |
+| 🗄️ **Database** | MongoDB Atlas |
+| ☁️ **Deployment** | Vercel (Frontend) + Railway (Backend) |
+| 📄 **PDF Export** | jsPDF + jspdf-autotable |
+| 🧭 **Styling** | Bootstrap 5 |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## ✨ Features  
 
-## Learn More
+- 🧑‍🏫 Add and manage **Teachers** with multiple subjects  
+- 🏫 Define **Classes** and subjects they learn  
+- ⏰ Configure **Opening, Closing, Recess Timings, and Class Duration**  
+- 🧮 Automatic timetable generation  
+- 📅 Create separate **teacher-wise** and **class-wise** schedules  
+- 📥 **Export to PDF** directly from browser  
+- 🌐 Full **CORS-enabled API** integration  
+- 🕕 Handles **+5:30 hr IST offset** automatically for local times  
+- 📱 100% **Responsive** Bootstrap UI  
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🧠 Algorithm Overview  
 
-### Code Splitting
+1. Teachers and their subjects are defined.  
+2. Classes and their subjects are input.  
+3. School timings (opening, closing, recess, duration) are configured.  
+4. Backend algorithm schedules subjects into available time slots.  
+5. No overlap between teacher and class sessions.  
+6. Recess time is skipped automatically.  
+7. Both **class-wise** and **teacher-wise** schedules are generated and exported as PDF.  
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 🧾 API Documentation  
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### `POST /api/timetable/generate`
 
-### Making a Progressive Web App
+#### Request Example:
+```json
+{
+  "teacherData": [
+    { "name": "A", "subjects": ["Math", "Science"] }
+  ],
+  "classData": [
+    { "name": "1", "subjects": ["Math", "Science"] }
+  ],
+  "timings": {
+    "opening": "01:00",
+    "closing": "04:00",
+    "recessStart": "02:30",
+    "recessEnd": "03:00",
+    "classDuration": 30
+  }
+}
+````
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+#### Response Example:
 
-### Advanced Configuration
+```json
+[
+  { "class": "1", "subject": "Math", "teacher": "A", "time": "01:00" },
+  { "class": "1", "subject": "Science", "teacher": "A", "time": "01:30" }
+]
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## ⚙️ Backend Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+cd backend
+npm install
+npm start
+```
 
-### `npm run build` fails to minify
+➡️ Runs on
+`http://localhost:8080`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### `.env` File Example
+
+```
+MONGO_URI=mongodb://mongo:HDfQvonhifzPwyzfFIwVHWOAholjrRWQ@centerbeam.proxy.rlwy.net:42114
+PORT=8080
+```
+
+---
+
+## 💻 Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+➡️ Runs on
+`http://localhost:3000`
+
+Update your backend URL inside **Timetable.js**:
+
+```js
+fetch('https://timetablehub-backend-production.up.railway.app/api/timetable/generate')
+```
+
+---
+
+## ☁️ Deployment Guide
+
+### 🚉 Railway (Backend)
+
+1. Connect your GitHub repo on Railway.
+2. Add environment variables:
+
+   ```
+   MONGO_URI=your_connection_url
+   PORT=8080
+   ```
+3. Deploy 🚀
+
+### ⚛️ Vercel (Frontend)
+
+1. Import frontend folder to Vercel.
+2. Build Command → `npm run build`
+3. Output Directory → `build`
+4. Deploy ✅
+
+---
+
+## 🔐 CORS Configuration
+
+Add this in `server.js`:
+
+```js
+const cors = require("cors");
+
+app.use(cors({
+  origin: "https://timetable-hub.vercel.app",
+  credentials: true,
+}));
+```
+
+---
+
+## 📄 Example Output
+
+**Timings Input:**
+
+```
+Opening: 01:00
+Closing: 04:00
+Recess: 02:30 - 03:00
+Class Duration: 30 minutes
+```
+
+**Generated Output:**
+
+| Time          | Subject | Teacher |
+| ------------- | ------- | ------- |
+| 01:00 - 01:30 | AA      | A       |
+| 01:30 - 02:00 | BB      | A       |
+| 02:30 - 03:00 | Recess  | -       |
+| 03:00 - 03:30 | CC      | A       |
+
+---
+
+## 🧾 PDF Export Example
+
+```js
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+
+const doc = new jsPDF();
+doc.autoTable(["Time", "End Time", "Subject", "Teacher"], timetableData);
+doc.save("Timetable.pdf");
+```
+
+---
+
+## 📦 Dependencies
+
+### Frontend
+
+```bash
+npm install react bootstrap jspdf jspdf-autotable
+```
+
+### Backend
+
+```bash
+npm install express mongoose cors dotenv
+```
+
+---
+
+## 🧩 Folder Tips
+
+* All API logic is in `routes/timetableRoutes.js`
+* MongoDB connection configured in `config/db.js`
+* Environment variables stored in `.env`
+* `server.js` starts the Express app with proper CORS setup
+
+---
+
+## 🧭 Future Enhancements
+
+* [ ] Multi-day or weekly timetable generation
+* [ ] Teacher workload optimization
+* [ ] Drag-and-drop timetable editing
+* [ ] Admin dashboard with analytics
+* [ ] AI-assisted subject allocation
+
+---
+
+## 👨‍💻 Developer
+
+**👤 Girish More**
+📧 [girishmore097@gmail.com](mailto:girishmore097@gmail.com)
+📱 +91-9890564620
+💼 MERN Stack Developer | Data Analytics | AI Enthusiast
+
+<p align="center">
+  <a href="https://github.com/girishmore2004">
+    <img src="https://img.shields.io/badge/GitHub-Girish%20More-black?style=for-the-badge&logo=github" />
+  </a>
+  <a href="mailto:girishmore097@gmail.com">
+    <img src="https://img.shields.io/badge/Email-Contact%20Me-blue?style=for-the-badge&logo=gmail" />
+  </a>
+</p>
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+You are free to modify and distribute with proper credit.
+
+---
+
+<p align="center">
+  ⭐ <b>Designed and Developed by Girish More</b>  
+  <br>© 2025 All Rights Reserved.
+</p>
+```
+
+---
