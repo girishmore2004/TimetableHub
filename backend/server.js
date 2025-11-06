@@ -1,29 +1,34 @@
-const express = require('express'); 
+const express = require('express');
+const cors = require('cors');
 const timetableRoutes = require('./routes/timetable');
 const db = require('./config/db');
-const cors = require('cors');
 
-const app = express();  
+const app = express();
 
-app.use(cors({
-  origin: ['https://timetable-hub.vercel.app'], // ✅ no trailing slash
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-}));
-
-// ✅ Handle preflight (OPTIONS) requests globally
+// ✅ CORS setup (allow your Vercel frontend)
+const allowedOrigins = ['https://timetable-hub.vercel.app'];
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
 app.options('*', cors());
 
+// ✅ Body parser
 app.use(express.json());
- 
-db.connect();
- 
-app.use('/api/timetable', timetableRoutes);
-app.get('/', (req, res) => {
-  res.send('Timetable Backend Running ✅');
-});
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// ✅ Connect database
+db.connect();
+
+// ✅ Routes
+app.use('/api/timetable', timetableRoutes);
+
+// ✅ Health check
+app.get('/', (req, res) => res.send('Timetable Backend Running ✅'));
+
+// ✅ Server
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
