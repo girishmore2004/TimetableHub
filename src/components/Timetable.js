@@ -62,7 +62,7 @@ const Timetable = () => {
     }
 
     try {
-      const response = await fetch('/api/timetable/generate', {
+      const response = await fetch('https://timetablehub-backend-production.up.railway.app/api/timetable/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
