@@ -413,6 +413,8 @@ const Timetable = () => {
       return;
     }
 
+    console.log('Sending to backend:', { teacherData, classData, timings });
+
     try {
       const response = await fetch('https://timetablehub-backend-production.up.railway.app/api/timetable/generate', {
         method: 'POST',
@@ -428,6 +430,8 @@ const Timetable = () => {
       }
 
       const data = await response.json();
+      console.log('Backend returned:', data);
+      
       const styledData = data.map(entry => ({
         ...entry,
         teacher: entry.teacher === 'Unscheduled' ? <span style={{ color: 'red' }}>Unscheduled</span> : entry.teacher
@@ -435,6 +439,7 @@ const Timetable = () => {
       setTimetable(styledData); 
     } catch (error) {
       console.error('Error generating timetable:', error.message);
+      alert('Error: ' + error.message);
     }
   };
  
@@ -512,6 +517,7 @@ const Timetable = () => {
               value={timings[timeType]}
               onChange={(e) => setTimings({ ...timings, [timeType]: e.target.value })}
             >
+              <option value="">Select time</option>
               {timeOptions.map(time => (
                 <option key={time} value={time}>{time}</option>
               ))}
@@ -524,7 +530,7 @@ const Timetable = () => {
             type="number"
             name="classDuration"
             value={timings.classDuration}
-            onChange={(e) => setTimings({ ...timings, classDuration: parseInt(e.target.value, 10) })}
+            onChange={(e) => setTimings({ ...timings, classDuration: parseInt(e.target.value, 10) || 0 })}
           />
         </div>
       </div>
@@ -674,5 +680,3 @@ const Timetable = () => {
 };
 
 export default Timetable;
-
-
