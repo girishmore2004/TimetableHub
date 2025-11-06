@@ -4,12 +4,16 @@ const db = require('./config/db');
 const cors = require('cors');
 
 const app = express();  
-const corsOptions = {
-  origin: 'https://timetable-hub.vercel.app', // replace with your Netlify site URL
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+
+app.use(cors({
+  origin: ['https://timetable-hub.vercel.app'], // ✅ no trailing slash
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
-};
-app.use(cors(corsOptions));
+}));
+
+// ✅ Handle preflight (OPTIONS) requests globally
+app.options('*', cors());
+
 app.use(express.json());
  
 db.connect();
